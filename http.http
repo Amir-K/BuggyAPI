@@ -1,0 +1,24 @@
+POST http://localhost:3000/api/invoice
+
+{
+    "invoiceNumber": "fdfddfdf",
+    "totalAmount": 3433443,
+    "currencyCode": "fdfddffd",
+    "timestamp": "sdfdfsd.fsdsfdfs"
+}
+
+###
+
+POST http://localhost:3000/api/balance
+
+{
+    "amount": 100
+}
+
+###
+POST http://localhost:3000/api/balance
+
+{
+    "amount": -50
+}
+
