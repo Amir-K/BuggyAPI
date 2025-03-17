@@ -5,9 +5,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// In-memory store (resets when server restarts)
-let transactions = [];
-let balance = 0;
+// In-memory store with user mapping
+let userTransactions = {};  // { userId: [...transactions] }
+let userBalances = {};     // { userId: balance }
 
 // Helper function to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 10);
@@ -16,10 +16,20 @@ const generateId = () => Math.random().toString(36).substring(2, 10);
  * POST /balance - Add a transaction (Deposit/Withdraw)
  */
 app.post("/balance", (req, res) => {
-  const { amount } = req.body;
-  console.log(req);
+  const { amount, userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
   if (typeof amount !== "number") {
     return res.status(400).json({ error: "Invalid amount" });
+  }
+
+  // Initialize user data if it doesn't exist
+  if (!userTransactions[userId]) {
+    userTransactions[userId] = [];
+    userBalances[userId] = 0;
   }
 
   // Create transaction
@@ -27,26 +37,38 @@ app.post("/balance", (req, res) => {
     id: generateId(),
     amount,
     timestamp: new Date().toISOString(),
+    userId
   };
 
-  transactions.push(transaction);
+  userTransactions[userId].push(transaction);
 
-  // BUG: If a withdrawal makes the balance negative, the last deposit is ignored
-  balance = transactions.reduce((acc, tx, index, arr) => {
+  // Calculate balance for this user
+  userBalances[userId] = userTransactions[userId].reduce((acc, tx, index, arr) => {
     if (acc + tx.amount < 0 && arr[index - 1]?.amount > 0) {
       return acc; // ❌ Incorrectly ignores the last deposit if balance goes negative
     }
     return acc + tx.amount;
   }, 0);
 
-  res.json({ message: "Transaction processed", balance, transactions });
+  res.json({ 
+    message: "Transaction request received", 
+  });
 });
 
 /**
- * GET /balance - Get current balance & transaction history
+ * GET /balance - Get current balance & transaction history for a user
  */
-app.get("/balance", (req, res) => {
-  res.json({ balance, transactions });
+app.get("/balance/:userId", (req, res) => {
+  const { userId } = req.params;
+  
+  if (!userTransactions[userId]) {
+    return res.json({ balance: 0, transactions: [] });
+  }
+
+  res.json({ 
+    balance: userBalances[userId], 
+    transactions: userTransactions[userId] 
+  });
 });
 
 // Start server
