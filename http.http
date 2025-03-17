@@ -12,6 +12,7 @@ POST https://buggyapi.onrender.com/balance
 Content-Type: application/json
 
 {
+    "userId": "sfdfdfdf",
     "amount": 100
 }
 

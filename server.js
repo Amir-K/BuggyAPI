@@ -58,7 +58,7 @@ app.post("/balance", (req, res) => {
     }, 0);
 
     console.log(`Transaction ${transaction.id} processed for user ${userId}`);
-  }, 5000);
+  }, 1000);
 });
 
 /**
